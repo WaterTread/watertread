@@ -1,3 +1,5 @@
+![Blade](blade.png)
+
 # Blade
 
 ## Function
