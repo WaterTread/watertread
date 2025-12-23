@@ -1,3 +1,5 @@
+![Center Panel](center_panel.png)
+
 # Hydrodynamic Center Panel
 
 ## Function
