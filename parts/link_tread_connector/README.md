@@ -33,9 +33,9 @@ This component forms the mechanical interface between the blade, cam follower, a
 
 ## LEGO Reference Parts
 
-- **3873** Technic Chain Tread 2.5 Wide  
-- **22961** Technic Axle with Perpendicular Pin Hole  
-- **3673** Technic Pin
+- [**3873** Technic Chain Tread 2.5 Wide](https://library.ldraw.org/parts/7308)  
+- [**22961** Technic Axle with Perpendicular Pin Hole](https://library.ldraw.org/parts/2013)  
+- [**3673** Technic Pin](https://library.ldraw.org/parts/6706)
 
 ---
 
