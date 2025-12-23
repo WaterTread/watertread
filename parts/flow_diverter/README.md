@@ -1,3 +1,5 @@
+![Flow Diverter](flow_diverter.png)
+
 # Flow Diverter
 
 ## Function
