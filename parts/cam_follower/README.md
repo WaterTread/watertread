@@ -33,8 +33,8 @@ Cam followers enable precise, repeatable blade motion without requiring active c
 
 ## LEGO Reference Parts
 
-- **7329** Technic Angle Connector 3-Way 60/120 Degrees
-- **22961** Technic Axle with Perpendicular Pin Hole (2 pcs)
+- [**7329** Technic Angle Connector 3-Way 60/120 Degrees](https://library.ldraw.org/parts/45842)
+- [**22961** Technic Axle with Perpendicular Pin Hole](https://library.ldraw.org/parts/2013) (2 pcs)
 
 ---
 
