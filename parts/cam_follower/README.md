@@ -1,3 +1,5 @@
+![Cam Follower](cam_follower.png)
+
 # Cam Follower
 
 ## Function
