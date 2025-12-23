@@ -28,14 +28,14 @@ Production dimensions are defined in the corresponding system version under `mod
 
 ## LEGO Reference Parts
 
-- [**59443** Technic Axle Joiner](https://library.ldraw.org/parts/10458) (2 pcs)
+- [**59443** Technic Axle Joiner](https://library.ldraw.org/parts/10458) (4 pcs)
 - [**3704** Technic Axle 2](https://library.ldraw.org/parts/6761) (2 pcs)
 
 ---
 
 ## Modifications
 
-- Increase the height of the Technic Axle Joiner from **2L to 4L**
+- Merge two Technic Axle Joiners to have height of **4L**
 - Extend the inner wedge profile of each axle joiner so that opposing joiners meet, forming a **continuous and uniform blade surface**
 - Shape the blade surface to fully cover the **1L-height gap between the cam followers**, preventing flow leakage during the capture phase
 - Cap the outer end of each axle joiner while leaving the internal cavity hollow to reduce mass; the trapped air also contributes to buoyancy when submerged, effectively reducing the blade’s apparent weight in water
