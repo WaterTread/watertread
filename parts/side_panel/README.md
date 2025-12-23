@@ -1,3 +1,5 @@
+![Side Panels](side_panels.png)
+
 # Hydrodynamic Side Panel
 
 ## Function
