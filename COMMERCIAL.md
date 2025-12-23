@@ -78,8 +78,8 @@ This project is not patented. The value of the commercial license lies in:
 
 For commercial licensing inquiries, discussions, or pilot projects, please contact:
 
-Project Maintainer:  
-Keijo Mukku  
+Project Maintainer:
+Keijo Mukku
 keijo.mukku@gmail.com
 
 Early-stage pilots, research collaborations, and first commercial deployments are especially welcome.
