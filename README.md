@@ -73,7 +73,7 @@ Commercial licensing is intentionally designed to be flexible, accessible, and a
 
 Royalty-based licenses are expected to be modest and competitive, often capped around approximately 1% of generated revenue, depending on project scope.
 
-See COMMERCIAL.md for details.
+See [COMMERCIAL.md](COMMERCIAL.md) for details.
 
 ---
 
