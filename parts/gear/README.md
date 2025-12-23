@@ -44,7 +44,7 @@ Gears are used in synchronized pairs at the front and rear of the system to main
 
 ## LEGO Reference Part (Prototype)
 
-- **3649** Technic Gear 40 Tooth
+- [**3649** Technic Gear 40 Tooth](https://library.ldraw.org/parts/6673)
 
 Reference parts are used for prototyping only and do not constrain production geometry.
 
