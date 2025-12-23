@@ -1,3 +1,5 @@
+![Axle](axle.png)
+
 # Axle
 
 ## Function
