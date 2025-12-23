@@ -1,3 +1,5 @@
+![Gear](gear.png)
+
 # Gear
 
 ## Function
