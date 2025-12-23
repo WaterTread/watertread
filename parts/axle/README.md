@@ -47,8 +47,8 @@ Axles are critical structural and functional elements of the power transmission 
 
 ## LEGO Reference Parts (Prototype)
 
-- **59443** Technic Axle Joiner
-- **3737** Technic Axle 10
+- [**59443** Technic Axle Joiner](https://library.ldraw.org/parts/10458)
+- [**3737** Technic Axle 10](https://library.ldraw.org/parts/6803)
 
 Reference parts are used for prototyping only and do not constrain production geometry.
 
