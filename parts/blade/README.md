@@ -26,8 +26,8 @@ Production dimensions are defined in the corresponding system version under `mod
 
 ## LEGO Reference Parts
 
-- **59443** Technic Axle Joiner (2 pcs)
-- **3704** Technic Axle 2 (2 pcs)
+- [**59443** Technic Axle Joiner](https://library.ldraw.org/parts/10458) (2 pcs)
+- [**3704** Technic Axle 2](https://library.ldraw.org/parts/6761) (2 pcs)
 
 ---
 
