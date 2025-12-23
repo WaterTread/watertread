@@ -1,3 +1,5 @@
+![Pinion](pinion.png)
+
 # Pinion
 
 ## Function
