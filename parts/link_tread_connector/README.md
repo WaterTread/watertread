@@ -1,3 +1,5 @@
+![Link Tread Connector](link_tread_connector.png)
+
 # Link Tread with Connector
 
 ## Function
