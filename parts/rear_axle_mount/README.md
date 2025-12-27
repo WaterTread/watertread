@@ -9,6 +9,12 @@ Unlike the front axle mount, the rear axle mount is intentionally compliant.
 
 ---
 
+## LEGO Technic reference part
+
+- [Technic Shock Absorber 18L (Extended)](https://library.ldraw.org/parts/26093)
+
+---
+
 ## Quantity
 
 2 pcs per system (one per side)
