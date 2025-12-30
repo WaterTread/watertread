@@ -1,3 +1,5 @@
+![Front Axle Mount](front_axle_mount.png)
+
 # Front Axle Mount
 
 ## Function
