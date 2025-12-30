@@ -1,3 +1,5 @@
+![Rear Axle Mount](rear_axle_mount.png)
+
 # Rear Axle Mount
 
 ## Function
