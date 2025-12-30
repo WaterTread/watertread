@@ -19,10 +19,6 @@ The frame defines the overall geometry, rigidity, and transportability of the sy
 
 ## Interfaces
 
-- **Axles**
-  - Front and rear axles are mounted to the frame via axle mounts
-  - Frame maintains fixed spacing between axles, defining tread length and geometry
-
 - **Axle Mounts**
   - Front axle mounts are rigidly fixed to the frame
   - Rear axle mounts interface with the frame via spring-loaded mechanisms for tread tensioning
