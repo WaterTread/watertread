@@ -26,21 +26,21 @@ This separation keeps the conceptual design stable while allowing implementation
 
 ## Parts Index
 
-- [Blade](blade/)
-- [Cam Follower](cam_follower/)
-- [Link Tread](link_tread/)
-- [Link Tread with Connector](link_tread_connector/)
-- [Cam](cam/)
-- [Return Guide](return_guide/)
-- [Gear](gear/)
-- [Pinion](pinion/)
-- [Axle](axle/)
-- [Frame](frame/)
-- [Front Axle Mount](front_axle_mount/)
-- [Rear Axle Mount](rear_axle_mount/)
-- [Hydrodynamic Side Panel](side_panel/)
-- [Hydrodynamic Center Panel](center_panel/)
-- [Flow Diverter](flow_diverter/)
+1. [Axle](axle/)
+2. [Blade](blade/)
+3. [Cam](cam/)
+4. [Cam Follower](cam_follower/)
+5. [Center Panel](center_panel/)
+6. [Flow Diverter](flow_diverter/)
+7. [Frame](frame/)
+8. [Front Axle Mount](front_axle_mount/)
+9. [Gear](gear/)
+10. [Link Tread](link_tread/)
+11. [Link Tread with Connector](link_tread_connector/)
+12. [Pinion](pinion/)
+13. [Rear Axle Mount](rear_axle_mount/)
+14. [Return Guide](return_guide/)
+15. [Side Panel](side_panel/)
 
 ---
 
