@@ -1,6 +1,6 @@
-![Link Tread Connector](link_tread_connector.png)
-
 # Link Tread with Connector
+
+[See 3D-model](./link_tread_connector.stl)
 
 ## Function
 
