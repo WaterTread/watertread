@@ -4,6 +4,8 @@ WaterTread is an open, tread-based hydrodynamic energy conversion system designe
 
 The system is optimized for low- to moderate-flow environments and emphasizes simplicity, scalability, and containerized deployment.
 
+[See 3D-model](./models/prototype/prototype_wip.stl)
+
 ---
 
 ## Concept Overview
