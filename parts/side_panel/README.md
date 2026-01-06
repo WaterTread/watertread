@@ -1,6 +1,6 @@
-![Side Panels](side_panels.png)
-
 # Hydrodynamic Side Panel
+
+[See 3D-model](./side_panel.stl)
 
 ## Function
 
@@ -20,14 +20,17 @@ The side panels also serve as structural mounting surfaces for the cam elements.
 ## Interfaces
 
 - **Frame**
+
   - Side panels are rigidly mounted to the frame
   - Define the lateral geometry of the flow channel
 
 - **Blades**
+
   - Blades operate within the channel formed between the side panels
   - Panels do not move with the blades, minimizing moving mass
 
 - **Cam**
+
   - Cam elements are mounted to the inner surface of the side panels
   - Provides precise alignment for cam–follower interaction
 
