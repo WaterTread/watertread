@@ -1,6 +1,6 @@
-![Rear Axle Mount](rear_axle_mount.png)
-
 # Rear Axle Mount
+
+[See 3D-model](./rear_axle_mount.stl)
 
 ## Function
 
@@ -13,7 +13,8 @@ Unlike the front axle mount, the rear axle mount is intentionally compliant.
 
 ## LEGO Technic reference part
 
-- [Technic Shock Absorber 18L (Extended)](https://library.ldraw.org/parts/26093)
+- [Technic Shock Absorber 6.5L Soft](https://library.ldraw.org/parts/8118)
+- [Technic Beam 3](https://library.ldraw.org/parts/1146)
 
 ---
 
@@ -26,14 +27,17 @@ Unlike the front axle mount, the rear axle mount is intentionally compliant.
 ## Interfaces
 
 - **Axle**
+
   - Supports the rear axle shaft
   - Allows limited axial displacement for tension adjustment
 
 - **Frame**
+
   - Mount is connected to the frame via spring housings
   - Frame defines the allowable movement range
 
 - **Gear**
+
   - Maintains correct gear meshing under varying load and tension conditions
 
 - **Link Tread**
