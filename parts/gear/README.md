@@ -1,6 +1,6 @@
 # Gear
 
-[See 3D-model](./link_tread.stl)
+[See 3D-model](./gear.stl)
 
 ## Function
 
