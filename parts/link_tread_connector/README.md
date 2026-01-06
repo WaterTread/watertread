@@ -36,7 +36,7 @@ This component forms the mechanical interface between the blade, cam follower, a
 ## LEGO Reference Parts
 
 - [**3873** Technic Chain Tread 2.5 Wide](https://library.ldraw.org/parts/7308)  
-- [**22961** Technic Axle with Perpendicular Pin Hole](https://library.ldraw.org/parts/2013)  
+- [**18654** Technic Beam 1](https://library.ldraw.org/parts/1223)  
 - [**3673** Technic Pin](https://library.ldraw.org/parts/6706)
 
 ---
@@ -44,8 +44,7 @@ This component forms the mechanical interface between the blade, cam follower, a
 ## Modifications
 
 - Link tread modified as described in the Link Tread specification
-- The axle section of the perpendicular pin-hole element is removed
-- The remaining pin-hole connector is repositioned and mounted on top of the tread’s top-plate surface
+- The Technic Beam 1 is repositioned and mounted on top of the tread’s top-plate surface
 - This configuration forms a rigid, perpendicular blade attachment point while maintaining tread continuity
 
 ---
