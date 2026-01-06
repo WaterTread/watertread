@@ -1,6 +1,6 @@
-![Gear](gear.png)
-
 # Gear
+
+[See 3D-model](./link_tread.stl)
 
 ## Function
 
@@ -19,14 +19,17 @@ Gears are used in synchronized pairs at the front and rear of the system to main
 ## Interfaces
 
 - **Link Tread**
+
   - The tread engages directly with the gear teeth
   - Linear tread motion is converted into rotational motion
 
 - **Axle**
+
   - Each gear pair is mounted on a shared axle
   - Ensures synchronized rotation of parallel tread assemblies
 
 - **Pinion**
+
   - Gear engages with a smaller pinion to increase rotational speed for the generator
 
 - **Frame and Axle Mounts**
