@@ -1,6 +1,6 @@
-[See 3D-model](./link_tread.stl)
-
 # Link Tread
+
+[See 3D-model](./link_tread.stl)
 
 ## Function
 
