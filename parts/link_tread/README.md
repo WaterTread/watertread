@@ -1,4 +1,4 @@
-![Link Tread](link_tread.png)
+[See 3D-model](./link_tread.stl)
 
 # Link Tread
 
