@@ -2,6 +2,8 @@
 
 [See 3D-model](./cam_follower.stl)
 
+Tags: #moving #kinematic #motion-constrained #tribological #friction-critical #wear-surface #contact-surface #load-bearing
+
 ## Function
 
 The cam follower interfaces between the blade and the cam, translating the cam profile into controlled blade rotation.
@@ -39,15 +41,7 @@ Cam followers enable precise, repeatable blade motion without requiring active c
 
 - [**7329** Technic Angle Connector 3-Way 60/120 Degrees](https://library.ldraw.org/parts/45842)
 - [**22961** Technic Axle with Perpendicular Pin Hole](https://library.ldraw.org/parts/2013) (2 pcs)
-
----
-
-## Modifications
-
-- Reference parts are combined to form a rigid cam follower arm
-- Geometry is arranged to provide sufficient clearance for rotation without interference
-- Contact surfaces are shaped to maintain stable engagement with the cam profile
-- Low-friction pins are used at the tread interface to minimize mechanical losses
+- [**3673** Technic Pin without Friction Ridges](https://library.ldraw.org/parts/6706)
 
 ---
 
@@ -64,16 +58,6 @@ Cam followers enable precise, repeatable blade motion without requiring active c
 - Cam follower mass is minimized to reduce inertial losses
 - Mechanical simplicity improves reliability in submerged operation
 - Passive operation ensures synchronization across all blades
-
----
-
-## Implementations
-
-- Prototype implementation:
-  `models/prototype/parts/cam_follower/`
-
-- Production implementation (v1.0):
-  `models/1.0/parts/cam_follower/`
 
 ---
 
