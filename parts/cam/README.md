@@ -1,6 +1,6 @@
-![Cams](cams.png)
-
 # Cam
+
+[See 3D-model](./cam.stl)
 
 Tags: #static #kinematic #cam-mechanism #motion-shaping #tribological #friction-critical #wear-surface #structural #guide
 
@@ -22,10 +22,12 @@ The cam operates without actuators or active control, relying solely on its geom
 ## Interfaces
 
 - **Cam Follower**
+
   - Cam followers ride along the cam profile during the capture phase
   - The cam profile determines blade orientation angle, timing, and dwell
 
 - **Hydrodynamic Side Panel**
+
   - The cam is mounted to the inner surface of the hydrodynamic side panel
   - Side panel provides structural support and precise alignment
 
@@ -59,16 +61,6 @@ The cam operates without actuators or active control, relying solely on its geom
 - Passive geometry ensures inherent synchronization across all blades
 - Fixed cam eliminates the need for sensors, controls, or actuators
 - Cam shape may evolve between system versions while maintaining the same functional role
-
----
-
-## Implementations
-
-- Prototype implementation:
-  `models/prototype/parts/cam/`
-
-- Production implementation (v1.0):
-  `models/1.0/parts/cam/`
 
 ---
 
