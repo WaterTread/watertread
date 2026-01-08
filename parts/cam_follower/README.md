@@ -1,6 +1,6 @@
-![Cam Follower](cam_follower.png)
-
 # Cam Follower
+
+[See 3D-model](./cam_follower.stl)
 
 ## Function
 
@@ -20,10 +20,12 @@ Cam followers enable precise, repeatable blade motion without requiring active c
 ## Interfaces
 
 - **Blade**
+
   - Each blade is connected to two cam followers, one at each end
   - Provides a rotational interface allowing the blade to pivot between operating states
 
 - **Cam**
+
   - The cam follower rides along the cam profile during the capture phase
   - Contact geometry determines blade orientation and timing
 
