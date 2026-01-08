@@ -2,6 +2,8 @@
 
 # Cam
 
+Tags: #static #kinematic #cam-mechanism #motion-shaping #tribological #friction-critical #wear-surface #structural #guide
+
 ## Function
 
 The cam is a fixed, passive control element that defines the blade capture geometry and timing.
