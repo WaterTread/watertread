@@ -1,5 +1,7 @@
 # WaterTread
 
+[![Finalist](https://img.shields.io/badge/Finalist-Fortum%20Spark%202024-0F4632?labelColor=F0F0F0&color=0F4632&style=flat)](https://www.fortum.com/media/2024/11/slush-week-2024-highlights)
+
 WaterTread is an open, tread-based hydrodynamic energy conversion system designed to harvest kinetic energy from flowing water using a controlled, blade-driven linear motion instead of a traditional rotating turbine.
 
 The system is optimized for low- to moderate-flow environments and emphasizes simplicity, scalability, and containerized deployment.
