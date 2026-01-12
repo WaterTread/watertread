@@ -35,12 +35,13 @@ This separation keeps the conceptual design stable while allowing implementation
 7. [Frame](frame/)
 8. [Front Axle Mount](front_axle_mount/)
 9. [Gear](gear/)
-10. [Link Tread](link_tread/)
-11. [Link Tread Connector](link_tread_connector/)
-12. [Pinion](pinion/)
-13. [Rear Axle Mount](rear_axle_mount/)
-14. [Return Guide](return_guide/)
-15. [Side Panel](side_panel/)
+10. [Generator](generator/)
+11. [Link Tread](link_tread/)
+12. [Link Tread Connector](link_tread_connector/)
+13. [Pinion](pinion/)
+14. [Rear Axle Mount](rear_axle_mount/)
+15. [Return Guide](return_guide/)
+16. [Side Panel](side_panel/)
 
 ---
 
