@@ -1,22 +1,87 @@
+import React, { useEffect, useMemo, useRef, useState } from "react";
+
 export default function App() {
-  // --- Visual rhythm ---
+  // -----------------------
+  // SETTINGS
+  // -----------------------
   const BAND = 12;
   const GAP = 12;
   const CENTER_WHITE = 24;
   const RINGS = 4;
 
-  // --- Ribbon geometry ---
-  const sideThickness = RINGS * BAND + (RINGS - 1) * GAP; // 84
-  const outerH = CENTER_WHITE + 2 * sideThickness; // 192
-  const outerW = 420;
+  // Blade geometry
+  const cutR = 18;
+  const dotR = 6;
 
-  const viewW = 700;
-  const viewH = 350;
+  // -----------------------
+  // PARAMETRIC BLADE (CENTERED ON HINGE Y=0)
+  // -----------------------
+  const BLADE_Y_TRIM = 0;
 
-  const x0 = (viewW - outerW) / 2;
-  const y0 = (viewH - outerH) / 2;
+  const bladeLocal = {
+    white: {
+      x: 1,
+      y: -BAND / 2 + BLADE_Y_TRIM,
+      w: 65,
+      h: BAND,
+      fill: "white",
+    },
+    black: {
+      x: 6,
+      y: +BAND / 2 + BLADE_Y_TRIM,
+      w: 60,
+      h: BAND,
+      fill: "#212326",
+    },
+  };
 
-  // --- Rounded rect ("pill") path helper ---
+  // -----------------------
+  // PRECISE PITCH (hinge + arms)
+  // -----------------------
+  const BLADE_COUNT = 6;
+  const OVERLAP = 1;
+
+  const leftExtent = -cutR;
+  const armEnd = bladeLocal.white.x + bladeLocal.white.w;
+  const rightExtent = Math.max(cutR, armEnd);
+
+  const bladeLengthAlongLane = rightExtent - leftExtent;
+  const bladePitch = bladeLengthAlongLane - OVERLAP;
+
+  // -----------------------
+  // TRACK WIDTH FROM BLADES
+  // -----------------------
+  const Rtrack = CENTER_WHITE / 2;
+  const Ptarget = BLADE_COUNT * bladePitch;
+
+  const Lstraight = Math.max(0, (Ptarget - 2 * Math.PI * Rtrack) / 2);
+  const trackW = 2 * Rtrack + Lstraight;
+  const trackH = CENTER_WHITE;
+
+  // -----------------------
+  // OUTER GEOMETRY FROM TRACK
+  // -----------------------
+  const sideThickness = RINGS * BAND + (RINGS - 1) * GAP;
+  const outerW = trackW + 2 * sideThickness;
+  const outerH = trackH + 2 * sideThickness;
+
+  // ✅ Responsive viewBox padding (keeps margins consistent)
+  const PAD = 32;
+
+  // ✅ Now we build everything at (0,0) + padding
+  const x0 = PAD;
+  const y0 = PAD;
+
+  const trackX = x0 + sideThickness;
+  const trackY = y0 + sideThickness;
+
+  // ✅ viewBox fits content automatically
+  const viewW = outerW + 2 * PAD;
+  const viewH = outerH + 2 * PAD;
+
+  // -----------------------
+  // RINGS
+  // -----------------------
   const rrPath = (x, y, w, h) => {
     const r = h / 2;
     const x2 = x + w;
@@ -35,47 +100,40 @@ export default function App() {
     ].join(" ");
   };
 
-  // --- Rings ---
-  const pitch = BAND + GAP; // 24
-  const rings = Array.from({ length: RINGS }).map((_, i) => {
-    const outerInset = i * pitch;
-    const innerInset = outerInset + BAND;
+  const pitchRing = BAND + GAP;
 
-    const ox = x0 + outerInset;
-    const oy = y0 + outerInset;
-    const ow = outerW - outerInset * 2;
-    const oh = outerH - outerInset * 2;
+  const rings = useMemo(() => {
+    return Array.from({ length: RINGS }).map((_, i) => {
+      const outerInset = i * pitchRing;
+      const innerInset = outerInset + BAND;
 
-    const ix = x0 + innerInset;
-    const iy = y0 + innerInset;
-    const iw = outerW - innerInset * 2;
-    const ih = outerH - innerInset * 2;
+      const ox = x0 + outerInset;
+      const oy = y0 + outerInset;
+      const ow = outerW - outerInset * 2;
+      const oh = outerH - outerInset * 2;
 
-    const d = `${rrPath(ox, oy, ow, oh)} ${rrPath(ix, iy, iw, ih)}`;
-    return <path key={i} d={d} fill="#212326" fillRule="evenodd" clipRule="evenodd" />;
-  });
+      const ix = x0 + innerInset;
+      const iy = y0 + innerInset;
+      const iw = outerW - innerInset * 2;
+      const ih = outerH - innerInset * 2;
 
-  // --- Track = innermost opening pill ---
-  const trackX = x0 + sideThickness;
-  const trackY = y0 + sideThickness;
-  const trackW = outerW - 2 * sideThickness;
-  const trackH = CENTER_WHITE;
+      const d = `${rrPath(ox, oy, ow, oh)} ${rrPath(ix, iy, iw, ih)}`;
 
-  // --- Blade geometry (LOCAL space) ---
-  const cutR = 18; // hinge outer white radius
-  const dotR = 6;
+      return (
+        <path
+          key={i}
+          d={d}
+          fill="#212326"
+          fillRule="evenodd"
+          clipRule="evenodd"
+        />
+      );
+    });
+  }, [RINGS, x0, y0, outerW, outerH, BAND, pitchRing]);
 
-  // Local frame convention:
-  // +X = outward normal direction (arms extend this way)
-  // +Y = clockwise tangent direction (downwards along the perimeter)
-  const bladeLocal = {
-    white: { x: 1, y: 6, w: 65, h: BAND, fill: "white" },
-    black: { x: 6, y: 18, w: 60, h: BAND, fill: "#212326" }, // x=6 matches your "follows track" feel
-  };
-
-  // -------------------------------
-  // Track math (arc-length param)
-  // -------------------------------
+  // -----------------------
+  // TRACK PARAMS
+  // -----------------------
   function pillMetrics(w, h) {
     const R = h / 2;
     const L = w - 2 * R;
@@ -83,16 +141,12 @@ export default function App() {
     return { R, L, P };
   }
 
-  const { R: R0, L: L0, P: P0 } = pillMetrics(trackW, trackH);
+  const { P: P0 } = useMemo(() => pillMetrics(trackW, trackH), [trackW, trackH]);
 
-  /**
-   * Arc-length parameter s in [0, P) clockwise starting at TOP-LEFT of top straight (x+R, y).
-   * Returns boundary point B(s), outward normal n(s), tangent t(s), and track angle (normal angle).
-   */
+  // Returns boundary point (px,py) + outward normal (nx,ny) at arc-length s
   function pillBoundaryByArcLength(s, x, y, w, h) {
     const { R, L, P } = pillMetrics(w, h);
 
-    // Wrap s
     let ss = s % P;
     if (ss < 0) ss += P;
 
@@ -103,73 +157,106 @@ export default function App() {
     const bottomY = y + h;
     const leftCx = x + R;
 
-    let px, py, nx, ny, tx, ty;
+    let px, py, nx, ny;
 
     if (ss <= L) {
-      // Top straight (moving right)
+      // top straight, left->right
       px = topStartX + ss;
       py = topY;
-      nx = 0; ny = -1;
-      tx = 1; ty = 0;
+      nx = 0;
+      ny = -1;
     } else if (ss <= L + Math.PI * R) {
-      // Right arc (clockwise): angle -90 -> +90
-      const a = (ss - L) / R; // 0..PI
+      // right arc, top->bottom
+      const a = (ss - L) / R;
       const ang = -Math.PI / 2 + a;
       px = rightCx + R * Math.cos(ang);
       py = cy + R * Math.sin(ang);
-      nx = Math.cos(ang); ny = Math.sin(ang);
-      tx = -ny; ty = nx;
+      nx = Math.cos(ang);
+      ny = Math.sin(ang);
     } else if (ss <= L + Math.PI * R + L) {
-      // Bottom straight (moving left)
+      // bottom straight, right->left
       const t = ss - (L + Math.PI * R);
       px = topStartX + (L - t);
       py = bottomY;
-      nx = 0; ny = 1;
-      tx = -1; ty = 0;
+      nx = 0;
+      ny = 1;
     } else {
-      // Left arc (clockwise): angle +90 -> +270
+      // left arc, bottom->top
       const t = ss - (2 * L + Math.PI * R);
-      const a = t / R; // 0..PI
+      const a = t / R;
       const ang = Math.PI / 2 + a;
       px = leftCx + R * Math.cos(ang);
       py = cy + R * Math.sin(ang);
-      nx = Math.cos(ang); ny = Math.sin(ang);
-      tx = -ny; ty = nx;
+      nx = Math.cos(ang);
+      ny = Math.sin(ang);
     }
 
-    const normalDeg = (Math.atan2(ny, nx) * 180) / Math.PI;
-    const tangentDeg = (Math.atan2(ty, tx) * 180) / Math.PI;
-
-    return { px, py, nx, ny, tx, ty, normalDeg, tangentDeg, R, L, P };
+    return { px, py, nx, ny, P };
   }
 
-  function hingeOnTrackByS(s, cutRadius) {
+  function hingeOnTrackByS(s) {
     const b = pillBoundaryByArcLength(s, trackX, trackY, trackW, trackH);
     return {
-      x: b.px + b.nx * cutRadius,
-      y: b.py + b.ny * cutRadius,
-      trackNormalDeg: b.normalDeg,
-      trackTangentDeg: b.tangentDeg,
-      P: b.P,
-      L: b.L,
-      R: b.R,
+      x: b.px + b.nx * cutR,
+      y: b.py + b.ny * cutR,
     };
   }
 
-  // -------------------------------
-  // Blade component (ONE)
-  // -------------------------------
-  function Blade({ id, s, spinDeg = 0 }) {
-    const p = hingeOnTrackByS(s, cutR);
+  // -----------------------
+  // ANGLES (helpers)
+  // -----------------------
+  const clamp01 = (t) => Math.max(0, Math.min(1, t));
+  const wrap180 = (deg) => ((((deg + 180) % 360) + 360) % 360) - 180;
+  const lerpAngleShortest = (a, b, t) => a + wrap180(b - a) * t;
 
-    // Core rule: blade points along outward normal, plus optional spin.
-    const rot = p.trackNormalDeg + spinDeg;
+  const smoothstep = (e0, e1, x) => {
+    const t = clamp01((x - e0) / (e1 - e0));
+    return t * t * (3 - 2 * t);
+  };
 
+  // -----------------------
+  // GEOMETRY-BASED TARGET ANGLE (VECTOR BLEND = NO WRAP JERKS)
+  // -----------------------
+  function desiredBladeAngleFromS(s) {
+    const b = pillBoundaryByArcLength(s, trackX, trackY, trackW, trackH);
+
+    const normalRad = Math.atan2(b.ny, b.nx);
+
+    // A) follow normal
+    const Ar = normalRad;
+
+    // B) normal - 90deg
+    const Br = normalRad - Math.PI / 2;
+
+    const topY = trackY;
+    const bottomY = trackY + trackH;
+    const midY = (topY + bottomY) * 0.5;
+
+    // You found 0.4 feels good -> keep it
+    const band = trackH * 0.4;
+
+    const w = smoothstep(midY - band, midY + band, b.py);
+
+    // Vector blend (stable)
+    const ax = Math.cos(Ar),
+      ay = Math.sin(Ar);
+    const bx = Math.cos(Br),
+      by = Math.sin(Br);
+
+    let vx = (1 - w) * ax + w * bx;
+    let vy = (1 - w) * ay + w * by;
+
+    const len = Math.hypot(vx, vy) || 1;
+    vx /= len;
+    vy /= len;
+
+    return (Math.atan2(vy, vx) * 180) / Math.PI;
+  }
+
+  function Blade({ id, s, angle }) {
+    const p = hingeOnTrackByS(s);
     return (
-      <g id={id} transform={`translate(${p.x} ${p.y}) rotate(${rot})`}>
-        <circle cx="0" cy="0" r={cutR} fill="white" />
-        <circle cx="0" cy="0" r={dotR} fill="#212326" />
-
+      <g id={id} transform={`translate(${p.x} ${p.y}) rotate(${angle})`}>
         <rect
           x={bladeLocal.white.x}
           y={bladeLocal.white.y}
@@ -184,48 +271,56 @@ export default function App() {
           height={bladeLocal.black.h}
           fill={bladeLocal.black.fill}
         />
+        <circle cx="0" cy="0" r={cutR} fill="white" />
+        <circle cx="0" cy="0" r={dotR} fill="#212326" />
       </g>
     );
   }
 
-  // -------------------------------
-  // Even spacing + top/bottom columns aligned
-  // -------------------------------
-  // We pick two columns on the TOP straight by choosing x-fractions.
-  // Then we compute the matching BOTTOM arc-length s so the x is identical.
-  //
-  // Top straight s = f * L
-  // Bottom straight begins at s = L + pi*R, and runs right->left. Matching x => use (1-f).
-  //
-  // This gives genuinely symmetric spacing and exact x-alignment.
+  // -----------------------
+  // ANIMATION
+  // -----------------------
+  const speed = 35;
+  const angleResponse = 20;
 
-  const f1 = 0.30;
-  const f2 = 0.70;
+  const bladesRef = useRef(
+    Array.from({ length: BLADE_COUNT }).map((_, k) => ({
+      id: `blade-${k}`,
+      s: (k * bladePitch) % P0,
+      angle: 0,
+    }))
+  );
 
-  const sTop1 = f1 * L0;
-  const sTop2 = f2 * L0;
+  const [renderBlades, setRenderBlades] = useState(() => bladesRef.current);
 
-  const sBottom1 = L0 + Math.PI * R0 + (1 - f1) * L0;
-  const sBottom2 = L0 + Math.PI * R0 + (1 - f2) * L0;
+  useEffect(() => {
+    let raf = 0;
+    let last = performance.now();
 
-  // Ends: midpoints of right/left arcs (for “end hinges”)
-  const sRightEnd = L0 + (Math.PI / 2) * R0;
-  const sLeftEnd = 2 * L0 + Math.PI * R0 + (Math.PI / 2) * R0;
+    const tick = (now) => {
+      const dt = Math.min(0.05, (now - last) / 1000);
+      last = now;
 
-  // -------------------------------
-  // Optional: spin functions (for animation later)
-  // -------------------------------
-  // Example: spin depends on where you are, or time.
-  // For now static defaults:
-  const spinTop = 0;
+      const alpha = 1 - Math.exp(-angleResponse * dt);
 
-  // Bottom in your static had different spins (45 and 0) relative to track normal (which is +90 on bottom).
-  // Here we set those as "spinDeg" values:
-  // - track normal at bottom straight is +90
-  // - if you want absolute 45 => spin = 45 - 90 = -45
-  // - if you want absolute 0  => spin = 0  - 90 = -90
-  const spinBottom1 = -45;
-  const spinBottom2 = -90;
+      const next = bladesRef.current.map((b) => {
+        let s = (b.s + speed * dt) % P0;
+        if (s < 0) s += P0;
+
+        const targetAngle = desiredBladeAngleFromS(s);
+        const angle = lerpAngleShortest(b.angle, targetAngle, alpha);
+
+        return { ...b, s, angle };
+      });
+
+      bladesRef.current = next;
+      setRenderBlades(next);
+      raf = requestAnimationFrame(tick);
+    };
+
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [P0, speed, angleResponse, bladePitch]);
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-white">
@@ -235,25 +330,13 @@ export default function App() {
           className="w-full h-auto"
           xmlns="http://www.w3.org/2000/svg"
           shapeRendering="geometricPrecision"
+          preserveAspectRatio="xMidYMid meet"
         >
           {rings}
-
-          {/* Ends (auto, locked to innermost track ends) */}
-          <Blade id="blade-left-end" s={sLeftEnd} />
-          <Blade id="blade-right-end" s={sRightEnd} />
-
-          {/* 2 up (top straight) */}
-          <Blade id="blade-top-1" s={sTop1} spinDeg={spinTop} />
-          <Blade id="blade-top-2" s={sTop2} spinDeg={spinTop} />
-
-          {/* 2 down (bottom straight), x-aligned with top */}
-          <Blade id="blade-bottom-1" s={sBottom1} spinDeg={spinBottom1} />
-          <Blade id="blade-bottom-2" s={sBottom2} spinDeg={spinBottom2} />
+          {renderBlades.map((b) => (
+            <Blade key={b.id} id={b.id} s={b.s} angle={b.angle} />
+          ))}
         </svg>
-
-        <div className="mt-12 text-center text-neutral-800 text-sm tracking-widest font-medium">
-          GEOMETRIC LOGO
-        </div>
       </div>
     </div>
   );
