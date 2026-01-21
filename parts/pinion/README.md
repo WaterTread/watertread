@@ -1,6 +1,6 @@
-![Pinion](pinion.png)
-
 # Pinion
+
+[See 3D-model](./pinion.stl)
 
 ## Function
 
