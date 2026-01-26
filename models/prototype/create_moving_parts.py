@@ -26,7 +26,7 @@ PERIOD_N   = 6
 SPECIAL_AT = 0
 
 FRAME_START = 0
-FRAME_END   = 250
+FRAME_END   = 56
 
 JOINT0_NAME = "J0"
 JOINT1_NAME = "J1"
@@ -53,14 +53,41 @@ USE_EMPTY_FOR_WING = False
 
 HINGE_MARKER_NAME = "H0"  # REQUIRED inside pin+follower masters
 
-HINGE_AXIS_LOCAL = Vector((1, 0, 0))           # (ei enää käytössä followerissa)
-FOLLOWER_POINT_DIR_LOCAL = Vector((0, 1, 0))   # (ei enää käytössä followerissa)
-
 FORCE_WING_WORLD_X_ZERO = True
 
 PIN_OUTER_HALF_DIST = 72.0
 FOLLOWER_OUTER_HALF_DIST = 76.0
+
+# -------------------------
+# WING CAM (MAPPING)
+# -------------------------
+WING_CAM_ENABLE = True
+
+# EI OFFSETTIA: pidetään tässä vain dokumentointina, mutta EI käytetä
+WING_T_OFFSET = 0.0
+
+# Smooth interpolation between keypoints
+WING_MAP_SMOOTHSTEP = True  # käyttää cosine-ease (ei overshootia)
+
+# If wing is facing wrong way (up <-> down), flip 180 around hinge X
+WING_FLIP_AROUND_HINGE_X = True
+
+# AUTO: korjaa loopin lopun nykäisyn tekemällä lopusta saumattoman (unwrap + end-fix)
+WING_MAP_AUTO_FIX_LOOP = True
+
+WING_MAP = [
+(0.00, 540.0),
+(0.05, 300.0),
+(0.46, 300.0),
+(0.48, 350.0),
+(0.50, 370.0),
+(0.55, 450.0),
+(0.60, 526.0), 
+(0.65, 540.0),
+(1.00, 540.0),
+]
 # =========================
+
 
 # ---------- helpers ----------
 def get_obj(name, type_=None):
@@ -255,7 +282,137 @@ def detect_curve_direction_match(evalL0, evalR0, pitch):
     return -1.0 if (tL.dot(tR) < 0.0) else +1.0
 
 
+# -------------------------
+# WING MAP HELPERS (FIXED)
+# -------------------------
+def clamp01(x: float) -> float:
+    if x < 0.0: return 0.0
+    if x > 1.0: return 1.0
+    return x
+
+def lerp(a: float, b: float, t: float) -> float:
+    return a + (b - a) * t
+
+def ease_cos(u: float) -> float:
+    """
+    Smooth, but NEVER overshoots (unlike Catmull).
+    """
+    u = clamp01(u)
+    return 0.5 - 0.5 * math.cos(math.pi * u)
+
+def unwrap_angle_sequence(points):
+    """
+    Unwrap angles so interpolation never takes the wrong shorter path.
+    (Prevents 350 -> 10 going backwards unexpectedly.)
+    """
+    pts = [(float(t), float(a)) for (t, a) in points]
+    out = [list(pts[0])]
+    for i in range(1, len(pts)):
+        prev = out[-1][1]
+        a = pts[i][1]
+        while a - prev > 180.0:
+            a -= 360.0
+        while a - prev < -180.0:
+            a += 360.0
+        out.append([pts[i][0], a])
+    return [(t, a) for t, a in out]
+
+def fix_loop_end(points_unwrapped):
+    """
+    Make t=1 angle match smoothly back to t=0 (no jump at wrap).
+    Keeps the end close to the original trend.
+    """
+    if len(points_unwrapped) < 2:
+        return points_unwrapped
+
+    t0, a0 = points_unwrapped[0]
+    t1, a1 = points_unwrapped[-1]
+
+    k = int(round((a1 - a0) / 360.0))
+    target = a0 + 360.0 * k
+
+    cand = [a0 + 360.0 * (k - 1), a0 + 360.0 * k, a0 + 360.0 * (k + 1)]
+    target = min(cand, key=lambda x: abs(x - a1))
+
+    fixed = list(points_unwrapped)
+    fixed[-1] = (t1, target)
+    return fixed
+
+def prepare_wing_map(points):
+    pts = sorted(points, key=lambda x: x[0])
+
+    if abs(pts[0][0] - 0.0) > 1e-6:
+        raise RuntimeError("WING_MAP must start at t=0.0")
+    if abs(pts[-1][0] - 1.0) > 1e-6:
+        raise RuntimeError("WING_MAP must end at t=1.0")
+
+    pts = unwrap_angle_sequence(pts)
+
+    if WING_MAP_AUTO_FIX_LOOP:
+        pts = fix_loop_end(pts)
+
+    return pts
+
+def map_angle_from_points(t: float, points_prepared, use_smooth=True) -> float:
+    """
+    Deterministic mapping: t in [0..1) -> angle degrees.
+    NO OFFSET. Smooth per segment with cosine ease (no overshoot).
+    points_prepared = prepare_wing_map(WING_MAP)
+    """
+    t = t % 1.0
+
+    for i in range(len(points_prepared) - 1):
+        t0, a0 = points_prepared[i]
+        t1, a1 = points_prepared[i + 1]
+        if t0 <= t <= t1:
+            u = 0.0 if (t1 - t0) < 1e-12 else (t - t0) / (t1 - t0)
+            if use_smooth:
+                u = ease_cos(u)
+            return lerp(a0, a1, u)
+
+    return points_prepared[-1][1]
+
+def basis_from_cam_angle(x_axis_world: Vector, angle_deg: float) -> Matrix:
+    """
+    X = across pins (x_axis_world)
+    Y = cam direction in WORLD YZ plane:
+        0°=+Y, 90°=-Z, 180°=-Y, 270°=+Z
+    """
+    x = x_axis_world.copy()
+    if x.length < 1e-9:
+        x = Vector((1, 0, 0))
+    x.normalize()
+
+    a = math.radians(angle_deg % 360.0)
+
+    y_dir = Vector((0.0, math.cos(a), -math.sin(a)))
+
+    y = y_dir - x * y_dir.dot(x)
+    if y.length < 1e-9:
+        y = Vector((0, 1, 0))
+    y.normalize()
+
+    z = x.cross(y)
+    if z.length < 1e-9:
+        z = WORLD_UP.copy()
+    z.normalize()
+
+    y = z.cross(x)
+    if y.length < 1e-9:
+        y = Vector((0, 1, 0))
+    y.normalize()
+
+    R = Matrix((x, y, z)).transposed()
+
+    if WING_FLIP_AROUND_HINGE_X:
+        R = R @ Matrix.Rotation(math.pi, 3, 'X')
+
+    return R
+
+
 def main():
+    wing_map_prepared = prepare_wing_map(WING_MAP)
+
     scene = bpy.context.scene
     scene.frame_set(FRAME_START)
     bpy.context.view_layer.update()
@@ -287,8 +444,7 @@ def main():
 
     gear_r = pitch / (2.0 * math.sin(math.pi / float(GEAR_TEETH)))
 
-    # Eval curve polylines ONCE
-    evalL0 = eval_curve_polyline(curveL)  # (eval_obj, pts2, seglen, cum, total)
+    evalL0 = eval_curve_polyline(curveL)
     totalLenL = evalL0[4]
     count = max(2, int(round(totalLenL / pitch)))
 
@@ -328,24 +484,17 @@ def main():
             raise RuntimeError("CamFollower master missing child empty H0.")
         fol_h0_local = tmp
 
-    # Precompute constant offset matrices (faster)
     pin_h0_off_M = Matrix.Translation(-pin_h0_local) if not USE_EMPTY_FOR_PIN else None
     fol_h0_off_M = Matrix.Translation(-fol_h0_local) if not USE_EMPTY_FOR_FOLLOWER else None
 
     linksL = [
-        duplicate_object(
-            linkB if ((i % PERIOD_N) == SPECIAL_AT) else linkA,
-            f"L_ChainLink_{i:04d}",
-            colL
-        )
+        duplicate_object(linkB if ((i % PERIOD_N) == SPECIAL_AT) else linkA,
+                         f"L_ChainLink_{i:04d}", colL)
         for i in range(count)
     ]
     linksR = [
-        duplicate_object(
-            linkB if ((i % PERIOD_N) == SPECIAL_AT) else linkA,
-            f"R_ChainLink_{i:04d}",
-            colR
-        )
+        duplicate_object(linkB if ((i % PERIOD_N) == SPECIAL_AT) else linkA,
+                         f"R_ChainLink_{i:04d}", colR)
         for i in range(count)
     ]
 
@@ -355,7 +504,6 @@ def main():
         n_links = len(links)
         prev_up_per_link = [None] * n_links
 
-        # Local shortcuts
         frame_set = scene.frame_set
         view_update = bpy.context.view_layer.update
         axis = GEAR_ROT_AXIS
@@ -390,16 +538,8 @@ def main():
                 obj.keyframe_insert("location", frame=f)
                 obj.keyframe_insert("rotation_quaternion", frame=f)
 
-        return total_len
-
     bake_chain_from_eval(evalL0, linksL, dirL)
     bake_chain_from_eval(evalR0, linksR, dirR)
-
-    # Forward direction in LINK local (used for wing orientation hint)
-    link_forward_local = (a_j1 - a_j0)
-    if link_forward_local.length < 1e-9:
-        link_forward_local = Vector((0, 1, 0))
-    link_forward_local.normalize()
 
     rigs = []
     for i in range(count):
@@ -417,23 +557,24 @@ def main():
 
         rigs.append((i, pinL, folL, pinR, folR, wingPivot, wing))
 
-    # Bake rigs (Follower oriented SAME AS WING)
     frame_set = scene.frame_set
     view_update = bpy.context.view_layer.update
+    axis = GEAR_ROT_AXIS
 
     for f in range(FRAME_START, FRAME_END + 1):
         frame_set(f)
         view_update()
 
+        theta = (get_axis_angle(gear, axis) - theta0) * DIR_SIGN
+        traveled = theta * gear_r
+
         for (i, pinL, folL, pinR, folR, wingPivot, wing) in rigs:
             linkL = linksL[i]
             linkR = linksR[i]
 
-            # C0 world (Link_B mount points)
             C0L_w = (linkL.matrix_world @ c0_local)
             C0R_w = (linkR.matrix_world @ c0_local)
 
-            # Across direction and current half separation
             x_vec = (C0R_w - C0L_w)
             if x_vec.length < 1e-9:
                 x_dir = Vector((1, 0, 0))
@@ -442,18 +583,15 @@ def main():
                 x_dir = x_vec.normalized()
                 half_sep = 0.5 * x_vec.length
 
-            # How much to push outward from mount points
             pin_extra = (PIN_OUTER_HALF_DIST - half_sep)
             fol_extra = (FOLLOWER_OUTER_HALF_DIST - half_sep)
 
-            # Outward-adjusted positions
             PIN_L_w = C0L_w - x_dir * pin_extra
             PIN_R_w = C0R_w + x_dir * pin_extra
 
             FOL_L_w = C0L_w - x_dir * fol_extra
             FOL_R_w = C0R_w + x_dir * fol_extra
 
-            # pin follows link rotation (unchanged behavior, only moved outward)
             qL = linkL.matrix_world.to_quaternion()
             qR = linkR.matrix_world.to_quaternion()
             qL_M = qL.to_matrix().to_4x4()
@@ -470,36 +608,41 @@ def main():
             pinL.keyframe_insert("location", frame=f); pinL.keyframe_insert("rotation_quaternion", frame=f)
             pinR.keyframe_insert("location", frame=f); pinR.keyframe_insert("rotation_quaternion", frame=f)
 
-            # Midpoint (based on original mounts)
             mid = (C0L_w + C0R_w) * 0.5
             if FORCE_WING_WORLD_X_ZERO:
                 mid.x = 0.0
 
-            # ===== SAME ORIENTATION BASIS FOR WING + FOLLOWERS =====
-            x = x_vec
-            if x.length < 1e-9:
-                x = Vector((1, 0, 0))
-            x.normalize()
+            if WING_CAM_ENABLE:
+                distL = dirL * (i * pitch) + traveled
+                t = (distL % totalLenL) / totalLenL
 
-            y = (linkL.matrix_world.to_3x3() @ link_forward_local)
-            if y.length < 1e-9:
-                y = Vector((0, 1, 0))
-            y.normalize()
+                ang = map_angle_from_points(t, wing_map_prepared, use_smooth=WING_MAP_SMOOTHSTEP)
+                R = basis_from_cam_angle(x_vec, ang)
+            else:
+                x = x_vec
+                if x.length < 1e-9:
+                    x = Vector((1, 0, 0))
+                x.normalize()
 
-            z = x.cross(y)
-            if z.length < 1e-8:
-                z = WORLD_UP.copy()
-            z.normalize()
+                y = (linkL.matrix_world.to_3x3() @ Vector((0, 1, 0)))
+                if y.length < 1e-9:
+                    y = Vector((0, 1, 0))
+                y.normalize()
 
-            y = z.cross(x)
-            if y.length < 1e-8:
-                y = Vector((0, 1, 0))
-            y.normalize()
+                z = x.cross(y)
+                if z.length < 1e-8:
+                    z = WORLD_UP.copy()
+                z.normalize()
 
-            R = Matrix((x, y, z)).transposed()
+                y = z.cross(x)
+                if y.length < 1e-8:
+                    y = Vector((0, 1, 0))
+                y.normalize()
+
+                R = Matrix((x, y, z)).transposed()
+
             R4 = R.to_4x4()
 
-            # ===== FOLLOWERS: SAME ROTATION AS WING, placed OUTER at ±76 =====
             def bake_one_follower_worldbasis(fol_obj, hinge_world):
                 if USE_EMPTY_FOR_FOLLOWER:
                     fol_obj.matrix_world = Matrix.Translation(hinge_world) @ R4
@@ -513,7 +656,6 @@ def main():
             bake_one_follower_worldbasis(folL, FOL_L_w)
             bake_one_follower_worldbasis(folR, FOL_R_w)
 
-            # ===== WING: SAME BASIS, placed at mid =====
             wingPivot.matrix_world = Matrix.Translation(mid) @ R4
             wingPivot.scale = (1,1,1)
             wingPivot.keyframe_insert("location", frame=f)
@@ -524,6 +666,5 @@ def main():
             wing.keyframe_insert("location", frame=f)
             wing.keyframe_insert("rotation_quaternion", frame=f)
 
-    print("✅ Done: pin at ±72, follower at ±76, both oriented like wing.")
 
 main()
