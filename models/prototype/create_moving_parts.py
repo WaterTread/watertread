@@ -14,7 +14,7 @@ LINK_B_NAME = "Link_B"
 
 GEAR_NAME   = "Gear"
 GEAR_ROT_AXIS = 'X'
-DIR_SIGN = 1.0  # jos ketju kulkee väärään suuntaan, muuta -1.0
+DIR_SIGN = 1.0
 
 GEAR_TEETH = 40
 
@@ -35,7 +35,7 @@ CAM0_NAME   = "C0"
 LINK_PITCH_FALLBACK = 6.4
 
 AUTO_SWAP_JOINTS = True
-EXPECTED_LOCAL_FORWARD = Vector((0, -1, 0))  # your case
+EXPECTED_LOCAL_FORWARD = Vector((0, -1, 0))
 
 WORLD_UP = Vector((0, 0, 1))
 
@@ -51,7 +51,7 @@ USE_EMPTY_FOR_PIN = False
 USE_EMPTY_FOR_FOLLOWER = False
 USE_EMPTY_FOR_WING = False
 
-HINGE_MARKER_NAME = "H0"  # REQUIRED inside pin+follower masters
+HINGE_MARKER_NAME = "H0"
 
 FORCE_WING_WORLD_X_ZERO = True
 
@@ -63,9 +63,6 @@ FOLLOWER_OUTER_HALF_DIST = 76.0
 # -------------------------
 WING_CAM_ENABLE = True
 
-# EI OFFSETTIA: pidetään tässä vain dokumentointina, mutta EI käytetä
-WING_T_OFFSET = 0.0
-
 # Smooth interpolation between keypoints
 WING_MAP_SMOOTHSTEP = True  # käyttää cosine-ease (ei overshootia)
 
@@ -75,16 +72,30 @@ WING_FLIP_AROUND_HINGE_X = True
 # AUTO: korjaa loopin lopun nykäisyn tekemällä lopusta saumattoman (unwrap + end-fix)
 WING_MAP_AUTO_FIX_LOOP = True
 
+# Jos vieläkin tuntuu että cam liikkuu “väärään suuntaan”, vaihda -1.0
+CAM_ANGLE_SIGN = -1.0
+
 WING_MAP = [
-(0.00, 540.0),
-(0.05, 300.0),
-(0.46, 300.0),
-(0.48, 350.0),
-(0.50, 370.0),
-(0.55, 450.0),
-(0.60, 526.0), 
-(0.65, 540.0),
-(1.00, 540.0),
+    (0.00, 10.0),
+    (0.04, 0.0),
+    (0.06, 320.0),
+    (0.07, 300.0),
+    (0.08, 270.0),
+    (0.15, 270.0),
+    (0.23, 270.0),
+    (0.31, 270.0),
+    (0.38, 270.0),
+    (0.44, 270.0),
+    (0.46, 305.0),
+    (0.48, 0.0),
+    (0.54, 0.0),
+    (0.62, 0.0),
+    (0.69, 0.0),
+    (0.77, 0.0),
+    (0.85, 0.0),
+    (0.92, 0.0),
+    (0.96, 0.0),
+    (1.00, 10.0),
 ]
 # =========================
 
@@ -281,10 +292,6 @@ def detect_curve_direction_match(evalL0, evalR0, pitch):
 
     return -1.0 if (tL.dot(tR) < 0.0) else +1.0
 
-
-# -------------------------
-# WING MAP HELPERS (FIXED)
-# -------------------------
 def clamp01(x: float) -> float:
     if x < 0.0: return 0.0
     if x > 1.0: return 1.0
@@ -294,17 +301,10 @@ def lerp(a: float, b: float, t: float) -> float:
     return a + (b - a) * t
 
 def ease_cos(u: float) -> float:
-    """
-    Smooth, but NEVER overshoots (unlike Catmull).
-    """
     u = clamp01(u)
     return 0.5 - 0.5 * math.cos(math.pi * u)
 
 def unwrap_angle_sequence(points):
-    """
-    Unwrap angles so interpolation never takes the wrong shorter path.
-    (Prevents 350 -> 10 going backwards unexpectedly.)
-    """
     pts = [(float(t), float(a)) for (t, a) in points]
     out = [list(pts[0])]
     for i in range(1, len(pts)):
@@ -318,10 +318,6 @@ def unwrap_angle_sequence(points):
     return [(t, a) for t, a in out]
 
 def fix_loop_end(points_unwrapped):
-    """
-    Make t=1 angle match smoothly back to t=0 (no jump at wrap).
-    Keeps the end close to the original trend.
-    """
     if len(points_unwrapped) < 2:
         return points_unwrapped
 
@@ -329,8 +325,6 @@ def fix_loop_end(points_unwrapped):
     t1, a1 = points_unwrapped[-1]
 
     k = int(round((a1 - a0) / 360.0))
-    target = a0 + 360.0 * k
-
     cand = [a0 + 360.0 * (k - 1), a0 + 360.0 * k, a0 + 360.0 * (k + 1)]
     target = min(cand, key=lambda x: abs(x - a1))
 
@@ -347,18 +341,11 @@ def prepare_wing_map(points):
         raise RuntimeError("WING_MAP must end at t=1.0")
 
     pts = unwrap_angle_sequence(pts)
-
     if WING_MAP_AUTO_FIX_LOOP:
         pts = fix_loop_end(pts)
-
     return pts
 
 def map_angle_from_points(t: float, points_prepared, use_smooth=True) -> float:
-    """
-    Deterministic mapping: t in [0..1) -> angle degrees.
-    NO OFFSET. Smooth per segment with cosine ease (no overshoot).
-    points_prepared = prepare_wing_map(WING_MAP)
-    """
     t = t % 1.0
 
     for i in range(len(points_prepared) - 1):
@@ -372,25 +359,22 @@ def map_angle_from_points(t: float, points_prepared, use_smooth=True) -> float:
 
     return points_prepared[-1][1]
 
-def basis_from_cam_angle(x_axis_world: Vector, angle_deg: float) -> Matrix:
-    """
-    X = across pins (x_axis_world)
-    Y = cam direction in WORLD YZ plane:
-        0°=+Y, 90°=-Z, 180°=-Y, 270°=+Z
-    """
+def basis_from_cam_angle(x_axis_world: Vector, angle_deg: float, base_y_world: Vector) -> Matrix:
     x = x_axis_world.copy()
     if x.length < 1e-9:
         x = Vector((1, 0, 0))
     x.normalize()
 
-    a = math.radians(angle_deg % 360.0)
+    y0 = base_y_world - x * base_y_world.dot(x)
+    if y0.length < 1e-9:
+        y0 = Vector((0, 1, 0)) - x * Vector((0, 1, 0)).dot(x)
+        if y0.length < 1e-9:
+            y0 = Vector((0, 0, 1)) - x * Vector((0, 0, 1)).dot(x)
+    y0.normalize()
 
-    y_dir = Vector((0.0, math.cos(a), -math.sin(a)))
-
-    y = y_dir - x * y_dir.dot(x)
-    if y.length < 1e-9:
-        y = Vector((0, 1, 0))
-    y.normalize()
+    a = math.radians(angle_deg)
+    Rax = Matrix.Rotation(a, 3, x)
+    y = (Rax @ y0).normalized()
 
     z = x.cross(y)
     if z.length < 1e-9:
@@ -617,7 +601,11 @@ def main():
                 t = (distL % totalLenL) / totalLenL
 
                 ang = map_angle_from_points(t, wing_map_prepared, use_smooth=WING_MAP_SMOOTHSTEP)
-                R = basis_from_cam_angle(x_vec, ang)
+                ang *= CAM_ANGLE_SIGN
+
+                base_y = (linkL.matrix_world.to_3x3() @ Vector((0, 1, 0)))
+
+                R = basis_from_cam_angle(x_vec, ang, base_y)
             else:
                 x = x_vec
                 if x.length < 1e-9:
@@ -665,6 +653,5 @@ def main():
             wing.scale = (1,1,1)
             wing.keyframe_insert("location", frame=f)
             wing.keyframe_insert("rotation_quaternion", frame=f)
-
 
 main()
