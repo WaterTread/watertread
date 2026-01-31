@@ -3,9 +3,6 @@ import math
 from bisect import bisect_right
 from mathutils import Vector, Matrix
 
-# =========================
-# SETTINGS
-# =========================
 CURVE_L_NAME = "TrackPath_L"
 CURVE_R_NAME = "TrackPath_R"
 
@@ -14,7 +11,6 @@ LINK_B_NAME = "Link_B"
 
 GEAR_NAME   = "Gear"
 GEAR_ROT_AXIS = 'X'
-DIR_SIGN = 1.0
 
 GEAR_TEETH = 40
 
@@ -26,7 +22,7 @@ PERIOD_N   = 6
 SPECIAL_AT = 0
 
 FRAME_START = 0
-FRAME_END   = 56
+FRAME_END   = 57
 
 JOINT0_NAME = "J0"
 JOINT1_NAME = "J1"
@@ -58,21 +54,42 @@ FORCE_WING_WORLD_X_ZERO = True
 PIN_OUTER_HALF_DIST = 72.0
 FOLLOWER_OUTER_HALF_DIST = 76.0
 
-# -------------------------
-# WING CAM (MAPPING)
-# -------------------------
+USE_MASTER_THETA = True
+
+# master angle (radians) = frame * speed + phase
+MASTER_SPEED_RAD_PER_FRAME = 0.05
+MASTER_PHASE_RAD = 0.0
+
+# Chain travel direction ONLY (do not touch gear visual direction)
+CHAIN_SIGN = +1.0  # flip if chain moves wrong way: +1 / -1
+
+# Gear visual direction
+GEAR_VIS_SIGN = -1.0  # flip if Gear visual spin should invert: +1 / -1
+
+# Pinion visual direction
+PINION_VIS_SIGN = +1.0  # flip if Pinion visual spin should invert: +1 / -1
+BAKE_MECHANICS = True
+CLEAR_EXISTING_MECH_ANIM = True
+
+MECH_ROT = [
+    ("Gear", 1.0, GEAR_VIS_SIGN, GEAR_ROT_AXIS),
+    ("Gear.001", 1.0, GEAR_VIS_SIGN, GEAR_ROT_AXIS),
+    ("Gear.002", 1.0, GEAR_VIS_SIGN, GEAR_ROT_AXIS),
+    ("Gear.003", 1.0, GEAR_VIS_SIGN, GEAR_ROT_AXIS),
+    ("Axle", 1.0, GEAR_VIS_SIGN, GEAR_ROT_AXIS),
+    ("Axle.001", 1.0, GEAR_VIS_SIGN, GEAR_ROT_AXIS),
+    ("Pinion", 5.0, PINION_VIS_SIGN, GEAR_ROT_AXIS),
+    ("PinionAxle", 5.0, PINION_VIS_SIGN, GEAR_ROT_AXIS),
+    ("Pinion.001", 5.0, PINION_VIS_SIGN, GEAR_ROT_AXIS),
+    ("PinionAxle.001", 5.0, PINION_VIS_SIGN, GEAR_ROT_AXIS),
+]
+
 WING_CAM_ENABLE = True
-
-# Smooth interpolation between keypoints
-WING_MAP_SMOOTHSTEP = True  # käyttää cosine-ease (ei overshootia)
-
-# If wing is facing wrong way (up <-> down), flip 180 around hinge X
+WING_MAP_SMOOTHSTEP = True
 WING_FLIP_AROUND_HINGE_X = True
-
-# AUTO: korjaa loopin lopun nykäisyn tekemällä lopusta saumattoman (unwrap + end-fix)
 WING_MAP_AUTO_FIX_LOOP = True
 
-# Jos vieläkin tuntuu että cam liikkuu “väärään suuntaan”, vaihda -1.0
+# If cam feels reversed, flip:
 CAM_ANGLE_SIGN = -1.0
 
 WING_MAP = [
@@ -218,11 +235,57 @@ def eval_curve_at_distance_fast(eval_obj, pts2, seglen, cum, total, dist):
     p_local = pts2[j].lerp(pts2[j+1], seg_t)
     return mw @ p_local
 
-def get_axis_angle(gear_obj, rot_axis='X'):
-    ax = rot_axis.upper()
-    gear_obj.rotation_mode = 'XYZ'
-    e = gear_obj.rotation_euler
-    return float(getattr(e, ax.lower()))
+def master_theta(frame: int) -> float:
+    return (float(frame) * float(MASTER_SPEED_RAD_PER_FRAME)) + float(MASTER_PHASE_RAD)
+
+def axis_vec_from_letter(letter: str) -> Vector:
+    l = letter.upper()
+    if l == 'X': return Vector((1,0,0))
+    if l == 'Y': return Vector((0,1,0))
+    return Vector((0,0,1))
+
+def quat_from_axis_angle(axis_vec: Vector, angle_rad: float):
+    axis = axis_vec.normalized() if axis_vec.length > 1e-9 else Vector((1,0,0))
+    return Matrix.Rotation(angle_rad, 4, axis).to_quaternion()
+
+def set_obj_quat(obj, q, frame):
+    obj.rotation_mode = 'QUATERNION'
+    obj.rotation_quaternion = q
+    obj.keyframe_insert("rotation_quaternion", frame=frame)
+
+def clear_anim_on(obj):
+    if obj and obj.animation_data:
+        obj.animation_data_clear()
+
+def bake_mechanics(scene):
+    if not BAKE_MECHANICS:
+        return
+
+    if CLEAR_EXISTING_MECH_ANIM:
+        for (name, _, _, _) in MECH_ROT:
+            o = bpy.data.objects.get(name)
+            if o:
+                clear_anim_on(o)
+
+    axis_cache = {}
+
+    for f in range(FRAME_START, FRAME_END + 1):
+        scene.frame_set(f)
+        bpy.context.view_layer.update()
+
+        th = master_theta(f)
+
+        for (name, ratio, sign, ax_letter) in MECH_ROT:
+            obj = bpy.data.objects.get(name)
+            if not obj:
+                continue
+
+            if ax_letter not in axis_cache:
+                axis_cache[ax_letter] = axis_vec_from_letter(ax_letter)
+
+            axis = axis_cache[ax_letter]
+            q = quat_from_axis_angle(axis, th * float(ratio) * float(sign))
+            set_obj_quat(obj, q, f)
 
 def stable_basis_from_forward(forward, prev_up=None):
     y = forward.normalized()
@@ -359,6 +422,10 @@ def map_angle_from_points(t: float, points_prepared, use_smooth=True) -> float:
 
     return points_prepared[-1][1]
 
+
+# -------------------------
+# CAM BASIS RELATIVE TO CHAIN TANGENT
+# -------------------------
 def basis_from_cam_angle(x_axis_world: Vector, angle_deg: float, base_y_world: Vector) -> Matrix:
     x = x_axis_world.copy()
     if x.length < 1e-9:
@@ -405,9 +472,13 @@ def main():
     curveR = get_obj(CURVE_R_NAME, "CURVE")
     linkA  = get_obj(LINK_A_NAME, "MESH")
     linkB  = get_obj(LINK_B_NAME, "MESH")
-    gear   = get_obj(GEAR_NAME)
 
-    theta0 = get_axis_angle(gear, GEAR_ROT_AXIS)
+    gear = get_obj(GEAR_NAME)
+
+    if USE_MASTER_THETA and BAKE_MECHANICS:
+        bake_mechanics(scene)
+        scene.frame_set(FRAME_START)
+        bpy.context.view_layer.update()
 
     c0_local = get_child_local(linkB, CAM0_NAME)
     if c0_local is None:
@@ -490,13 +561,18 @@ def main():
 
         frame_set = scene.frame_set
         view_update = bpy.context.view_layer.update
-        axis = GEAR_ROT_AXIS
+
+        t0 = master_theta(FRAME_START) if USE_MASTER_THETA else 0.0
 
         for f in range(FRAME_START, FRAME_END + 1):
             frame_set(f)
             view_update()
 
-            theta = (get_axis_angle(gear, axis) - theta0) * DIR_SIGN
+            if USE_MASTER_THETA:
+                theta = (master_theta(f) - t0) * CHAIN_SIGN
+            else:
+                theta = 0.0
+
             traveled = theta * gear_r
 
             ps = [None] * n_links
@@ -543,13 +619,14 @@ def main():
 
     frame_set = scene.frame_set
     view_update = bpy.context.view_layer.update
-    axis = GEAR_ROT_AXIS
+
+    t0 = master_theta(FRAME_START) if USE_MASTER_THETA else 0.0
 
     for f in range(FRAME_START, FRAME_END + 1):
         frame_set(f)
         view_update()
 
-        theta = (get_axis_angle(gear, axis) - theta0) * DIR_SIGN
+        theta = (master_theta(f) - t0) * CHAIN_SIGN if USE_MASTER_THETA else 0.0
         traveled = theta * gear_r
 
         for (i, pinL, folL, pinR, folR, wingPivot, wing) in rigs:
@@ -604,7 +681,6 @@ def main():
                 ang *= CAM_ANGLE_SIGN
 
                 base_y = (linkL.matrix_world.to_3x3() @ Vector((0, 1, 0)))
-
                 R = basis_from_cam_angle(x_vec, ang, base_y)
             else:
                 x = x_vec
