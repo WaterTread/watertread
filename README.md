@@ -1,3 +1,12 @@
+<div style="position:relative;width:100%;padding-top:56.25%;margin-bottom:40px;">
+  <iframe
+    src="https://watertreadweb.vercel.app/"
+    style="position:absolute;top:0;left:0;width:100%;height:100%;border:0;"
+    loading="lazy"
+    allowfullscreen
+  ></iframe>
+</div>
+
 # WaterTread
 
 [![Finalist](https://img.shields.io/badge/Finalist-Fortum%20Spark%202024-0F4632?labelColor=F0F0F0&color=0F4632&style=flat)](https://www.fortum.com/media/2024/11/slush-week-2024-highlights)
@@ -15,6 +24,7 @@ The system is optimized for low- to moderate-flow environments and emphasizes si
 Unlike conventional hydrokinetic turbines, WaterTread uses a dual-tread mechanism with actively oriented blades that engage the water flow over an extended linear capture path.
 
 Key principles:
+
 - Multiple blades are engaged simultaneously
 - Blades operate in alternating high-drag (capture) and low-drag (return) states
 - Motion is driven purely by hydrodynamic forces
@@ -60,6 +70,7 @@ README.md             This file
 This project is released under the Creative Commons Attribution–NonCommercial–ShareAlike 4.0 (CC BY-NC-SA 4.0) license.
 
 You are free to:
+
 - Study and experiment with the design
 - Build non-commercial prototypes
 - Modify and improve the design
@@ -95,6 +106,7 @@ WaterTread is currently in an active design and prototyping phase.
 ## Contributing
 
 Contributions are welcome in the form of:
+
 - Design feedback and reviews
 - Mechanical or hydrodynamic improvements
 - Simulation and analysis
