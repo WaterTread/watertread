@@ -1,12 +1,3 @@
-<div style="position:relative;width:100%;padding-top:56.25%;margin-bottom:40px;">
-  <iframe
-    src="https://watertreadweb.vercel.app/"
-    style="position:absolute;top:0;left:0;width:100%;height:100%;border:0;"
-    loading="lazy"
-    allowfullscreen
-  ></iframe>
-</div>
-
 # WaterTread
 
 [![Finalist](https://img.shields.io/badge/Finalist-Fortum%20Spark%202024-0F4632?labelColor=F0F0F0&color=0F4632&style=flat)](https://www.fortum.com/media/2024/11/slush-week-2024-highlights)
@@ -15,7 +6,7 @@ WaterTread is an open, tread-based hydrodynamic energy conversion system designe
 
 The system is optimized for low- to moderate-flow environments and emphasizes simplicity, scalability, and containerized deployment.
 
-[See 3D-model](./models/prototype/prototype_wip.stl)
+[See 3D-model](https://watertreadweb.vercel.app/)
 
 ---
 
